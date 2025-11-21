@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>JaagrukVoter - Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+  <div class="max-w-6xl mx-auto py-8 px-4">
+    <div class="flex justify-between items-center mb-6">
+      <h1 class="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+      <div class="flex gap-3 items-center">
+        <span id="adminEmail" class="text-sm text-slate-600"></span>
+        <button
+          id="logoutBtn"
+          class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded-md text-sm"
+        >
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Top Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-sm text-slate-500">Total Logins</h2>
+        <p id="totalLogins" class="text-2xl font-bold text-slate-800">0</p>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-sm text-slate-500">Guest Logins</h2>
+        <p id="guestLogins" class="text-2xl font-bold text-slate-800">0</p>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-sm text-slate-500">Total Searches</h2>
+        <p id="totalSearches" class="text-2xl font-bold text-slate-800">0</p>
+      </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-sm font-semibold text-slate-700 mb-2">Guest vs Registered</h2>
+        <canvas id="guestChart" height="200"></canvas>
+      </div>
+      <div class="bg-white rounded-xl shadow p-4">
+        <h2 class="text-sm font-semibold text-slate-700 mb-2">Logins per Day</h2>
+        <canvas id="loginsChart" height="200"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Queries -->
+    <div class="bg-white rounded-xl shadow p-4 mb-8">
+      <h2 class="text-sm font-semibold text-slate-700 mb-3">Top 5 Search Queries</h2>
+      <canvas id="queriesChart" height="120"></canvas>
+    </div>
+
+    <!-- Tables -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Login History Table -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-sm font-semibold text-slate-700">Recent Logins</h2>
+        </div>
+        <div class="max-h-72 overflow-y-auto">
+          <table class="min-w-full text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-left">
+                <th class="px-2 py-1">Email</th>
+                <th class="px-2 py-1">Guest</th>
+                <th class="px-2 py-1">Time</th>
+                <th class="px-2 py-1">IP</th>
+                <th class="px-2 py-1">Action</th>
+              </tr>
+            </thead>
+            <tbody id="loginsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Search History Table -->
+      <div class="bg-white rounded-xl shadow p-4">
+        <div class="flex justify-between items-center mb-3">
+          <h2 class="text-sm font-semibold text-slate-700">Recent Searches</h2>
+        </div>
+        <div class="max-h-72 overflow-y-auto">
+          <table class="min-w-full text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-left">
+                <th class="px-2 py-1">Query</th>
+                <th class="px-2 py-1">Type</th>
+                <th class="px-2 py-1">Lang</th>
+                <th class="px-2 py-1">Time</th>
+                <th class="px-2 py-1">IP</th>
+                <th class="px-2 py-1">Action</th>
+              </tr>
+            </thead>
+            <tbody id="searchTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "http://localhost:4000";
+    const token = localStorage.getItem("adminToken");
+
+    if (!token) {
+      window.location.href = "admin-login.html";
+    }
+
+    const adminEmailEl = document.getElementById("adminEmail");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const totalLoginsEl = document.getElementById("totalLogins");
+    const guestLoginsEl = document.getElementById("guestLogins");
+    const totalSearchesEl = document.getElementById("totalSearches");
+    const loginsTable = document.getElementById("loginsTable");
+    const searchTable = document.getElementById("searchTable");
+
+    let guestChart, loginsChart, queriesChart;
+
+    logoutBtn.addEventListener("click", () => {
+      localStorage.removeItem("adminToken");
+      window.location.href = "admin-login.html";
+    });
+
+    function formatTime(ts) {
+      try {
+        return new Date(ts).toLocaleString();
+      } catch {
+        return ts;
+      }
+    }
+
+    async function fetchJSON(url) {
+      const res = await fetch(url, {
+        headers: { Authorization: "Bearer " + token }
+      });
+      if (!res.ok) {
+        if (res.status === 401) {
+          localStorage.removeItem("adminToken");
+          window.location.href = "admin-login.html";
+        }
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Request failed");
+      }
+      return res.json();
+    }
+
+    async function loadData() {
+      try {
+        const [loginsRes, searchRes, statsRes] = await Promise.all([
+          fetchJSON(`${API_BASE}/api/admin/logins`),
+          fetchJSON(`${API_BASE}/api/admin/search-history`),
+          fetchJSON(`${API_BASE}/api/admin/stats`)
+        ]);
+
+        const logins = loginsRes.entries || [];
+        const searches = searchRes.entries || [];
+        const stats = statsRes || {};
+
+        // Summary counts
+        totalLoginsEl.textContent = logins.length;
+        totalSearchesEl.textContent = searches.length;
+
+        const guestEntry = (stats.guestBreakdown || []).find(
+          (g) => g.guest === 1
+        );
+        guestLoginsEl.textContent = guestEntry ? guestEntry.count : 0;
+
+        // Table: logins
+        loginsTable.innerHTML = "";
+        logins.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="px-2 py-1">${row.email}</td>
+            <td class="px-2 py-1">${row.is_guest ? "Yes" : "No"}</td>
+            <td class="px-2 py-1">${formatTime(row.timestamp)}</td>
+            <td class="px-2 py-1">${row.ip || ""}</td>
+            <td class="px-2 py-1">
+              <button data-id="${row.id}" class="del-login text-red-500 hover:underline">Delete</button>
+            </td>
+          `;
+          loginsTable.appendChild(tr);
+        });
+
+        // Table: searches
+        searchTable.innerHTML = "";
+        searches.forEach((row) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="px-2 py-1">${row.query}</td>
+            <td class="px-2 py-1">${row.type || ""}</td>
+            <td class="px-2 py-1">${row.language || ""}</td>
+            <td class="px-2 py-1">${formatTime(row.timestamp)}</td>
+            <td class="px-2 py-1">${row.ip || ""}</td>
+            <td class="px-2 py-1">
+              <button data-id="${row.id}" class="del-search text-red-500 hover:underline">Delete</button>
+            </td>
+          `;
+          searchTable.appendChild(tr);
+        });
+
+        // Event delegation for delete buttons
+        loginsTable.addEventListener("click", async (e) => {
+          if (e.target.classList.contains("del-login")) {
+            const id = e.target.getAttribute("data-id");
+            if (!confirm("Delete this login?")) return;
+            await fetch(`${API_BASE}/api/admin/logins/${id}`, {
+              method: "DELETE",
+              headers: { Authorization: "Bearer " + token }
+            });
+            loadData();
+          }
+        });
+
+        searchTable.addEventListener("click", async (e) => {
+          if (e.target.classList.contains("del-search")) {
+            const id = e.target.getAttribute("data-id");
+            if (!confirm("Delete this search?")) return;
+            await fetch(`${API_BASE}/api/admin/search-history/${id}`, {
+              method: "DELETE",
+              headers: { Authorization: "Bearer " + token }
+            });
+            loadData();
+          }
+        });
+
+        // Charts
+        const ctxGuest = document.getElementById("guestChart").getContext("2d");
+        const ctxLogins = document.getElementById("loginsChart").getContext("2d");
+        const ctxQueries = document.getElementById("queriesChart").getContext("2d");
+
+        const guestData = stats.guestBreakdown || [];
+        const guests = guestData.find((g) => g.guest === 1)?.count || 0;
+        const registered = guestData.find((g) => g.guest === 0)?.count || 0;
+
+        const loginDays = (stats.loginsPerDay || []).map((r) => r.day);
+        const loginCounts = (stats.loginsPerDay || []).map((r) => r.count);
+
+        const queryLabels = (stats.topQueries || []).map((q) => q.query);
+        const queryCounts = (stats.topQueries || []).map((q) => q.count);
+
+        if (guestChart) guestChart.destroy();
+        if (loginsChart) loginsChart.destroy();
+        if (queriesChart) queriesChart.destroy();
+
+        guestChart = new Chart(ctxGuest, {
+          type: "pie",
+          data: {
+            labels: ["Registered", "Guest"],
+            datasets: [
+              {
+                data: [registered, guests]
+              }
+            ]
+          }
+        });
+
+        loginsChart = new Chart(ctxLogins, {
+          type: "line",
+          data: {
+            labels: loginDays,
+            datasets: [
+              {
+                label: "Logins",
+                data: loginCounts
+              }
+            ]
+          }
+        });
+
+        queriesChart = new Chart(ctxQueries, {
+          type: "bar",
+          data: {
+            labels: queryLabels,
+            datasets: [
+              {
+                label: "Search Count",
+                data: queryCounts
+              }
+            ]
+          }
+        });
+
+        // Show admin email from token (simple decode)
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          adminEmailEl.textContent = payload.email;
+        } catch {
+          adminEmailEl.textContent = "";
+        }
+
+      } catch (err) {
+        alert("Failed to load admin data: " + err.message);
+      }
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
