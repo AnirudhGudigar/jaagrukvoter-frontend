@@ -47,62 +47,70 @@
     <p id="error" class="mt-3 text-sm text-red-600 text-center hidden"></p>
   </div>
 
-  <script>
-    const API_BASE = "https://jaagrukvoter-backend-2.onrender.com";
+<script>
+  const API_BASE = "https://jaagrukvoter-backend-2.onrender.com";
 
-    const emailInput = document.getElementById("email");
-    const loginBtn = document.getElementById("loginBtn");
-    const guestBtn = document.getElementById("guestBtn");
-    const errorEl = document.getElementById("error");
+  const emailInput = document.getElementById("email");
+  const loginBtn = document.getElementById("loginBtn");
+  const guestBtn = document.getElementById("guestBtn");
+  const errorEl = document.getElementById("error");
 
-    function showError(msg) {
-      errorEl.textContent = msg;
-      errorEl.classList.remove("hidden");
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.classList.remove("hidden");
+  }
+
+  // 🔹 NORMAL LOGIN
+  loginBtn.addEventListener("click", async () => {
+    const email = emailInput.value.trim();
+    if (!email) {
+      showError("Please enter your email.");
+      return;
     }
 
-    // --- NORMAL LOGIN ---
-    loginBtn.addEventListener("click", async () => {
-      const email = emailInput.value.trim();
-      if (!email) {
-        showError("Please enter your email.");
-        return;
-      }
+    try {
+      const res = await fetch(`${API_BASE}/api/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+      });
 
-      try {
-        const res = await fetch(`${API_BASE}/api/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email })
-        });
+      if (!res.ok) {
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Login failed");
-
-        // 🔥 SAVE LOGIN STATUS
-        localStorage.setItem("user_logged_in", "yes");
-
-        // Redirect
-        window.location.href = "index.html";
-      } catch (err) {
-        showError(err.message);
+        throw new Error(data.error || "Login failed");
       }
-    });
 
-    // --- GUEST LOGIN ---
-    guestBtn.addEventListener("click", async () => {
-      try {
-        const res = await fetch(`${API_BASE}/api/login-guest`, { method: "POST" });
+      // 🔥 Save login status
+      localStorage.setItem("user_logged_in", "yes");
+
+      // Redirect
+      window.location.href = "index.html";
+
+    } catch (err) {
+      showError(err.message);
+    }
+  });
+
+  // 🔹 GUEST LOGIN
+  guestBtn.addEventListener("click", async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/login-guest`, { method: "POST" });
+
+      if (!res.ok) {
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Guest login failed");
-
-        // 🔥 SAVE GUEST LOGIN STATUS
-        localStorage.setItem("user_logged_in", "guest");
-
-        // Redirect
-        window.location.href = "index.html";
-      } catch (err) {
-        showError(err.message);
+        throw new Error(data.error || "Guest login failed");
       }
-    });
+
+      // 🔥 Save guest login
+      localStorage.setItem("user_logged_in", "guest");
+
+      // Redirect  
+      window.location.href = "index.html";
+
+    } catch (err) {
+      showError(err.message);
+    }
+  });
 </script>
 
 </body>
