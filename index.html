@@ -3,11 +3,13 @@
 
 <head>
     <script>
-        // Redirect to login page if user is NOT logged in
-        if (!localStorage.getItem("user_logged_in")) {
-            window.location.href = "login.html";
-        }
+        document.addEventListener("DOMContentLoaded", () => {
+            if (!localStorage.getItem("user_logged_in")) {
+                window.location.href = "login.html";
+            }
+        });
     </script>
+    
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
