@@ -9,13 +9,6 @@
         }
       </script>
       
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            if (!localStorage.getItem("user_logged_in")) {
-                window.location.href = "login.html";
-            }
-        });
-    </script>
     
     
     <meta charset="UTF-8">
@@ -450,24 +443,7 @@
     }
 }
 
-// Save login when user opens site
-async function saveLogin(email = "guest@user.com") {
-    try {
-        await fetch("http://localhost:4000/api/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                email,
-                isGuest: true
-            })
-        });
-    } catch (err) {
-        console.error("Login save failed", err);
-    }
-}
 
-// Auto-log guest visitor
-saveLogin();
 
         document.addEventListener('DOMContentLoaded', () => {
             const API_BASE = "https://jaagrukvoter-backend-2.onrender.com";
