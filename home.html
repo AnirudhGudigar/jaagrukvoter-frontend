@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script>
+        // If NOT logged in → go to login page
+        if (!localStorage.getItem("user_logged_in")) {
+          window.location.href = "login.html";
+        }
+      </script>
+      
+    
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+
+    
+    <title>JaagrukVoter - Clear Ballot India</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load Inter font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        html {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* NEW: Animated Gradient Background Keyframes */
+        @keyframes animatedBackground {
+            0% {
+                background-position: 0% 50%;
+            }
+            50% {
+                background-position: 100% 50%;
+            }
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Simple loading spinner */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: #0ea5e9;
+            /* sky-500 */
+            animation: spin 1s ease infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Styles for new info cards */
+        .info-card h3 {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #075985;
+        }
+
+        .info-card .card-grid {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .info-card .card-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        .info-card .data-point {
+            background-color: #f0f9ff;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        }
+
+        .info-card .data-label {
+            display: block;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 500;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .info-card .data-value {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Fallback summary styles */
+        #summaryOutput h3 {
+            font-size: 1.25rem;
+            line-height: 1.75rem;
+            font-weight: 700;
+            color: #075985;
+            margin-top: 1.25rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 2px solid #e0f2fe;
+            padding-bottom: 0.25rem;
+        }
+
+        #summaryOutput p {
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        /* --- REMOVED OLD CHATBOT STYLES --- */
+
+        /* --- NEW MYSTERY BOTTLE STYLES --- */
+        #mysteryBottle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 4rem;
+            height: 4rem;
+            background: linear-gradient(to bottom, #0369a1, #38bdf8);
+            border-radius: 9999px;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.875rem;
+            line-height: 2.25rem;
+            font-weight: 700;
+        }
+
+        #mysteryBottle:hover {
+            transform: scale(1.1);
+        }
+
+        #chatBox {
+            position: fixed;
+            bottom: 7rem;
+            right: 2rem;
+            background-color: #ffffff;
+            color: #111827;
+            border-radius: 1rem;
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            width: 20rem;
+            padding: 1rem;
+            border: 1px solid #bae6fd;
+            z-index: 50;
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        
+        /* State for chatbox when hidden */
+        #chatBox.hidden {
+            opacity: 0;
+            transform: scale(0.95) translateY(1rem);
+            visibility: hidden;
+        }
+        
+        #chatBox .chat-messages {
+            height: 10rem;
+            overflow-y: auto;
+            margin-bottom: 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            background-color: #f0f9ff;
+            border-radius: 0.5rem;
+            padding: 0.5rem;
+        }
+        /* --- END MYSTERY BOTTLE STYLES --- */
+
+    </style>
+</head>
+
+<!-- MODIFIED: Removed bg-sky-100 and added inline style for dynamic background -->
+<body class="text-gray-900 min-h-screen" style="background: linear-gradient(270deg, #e0f2fe, #f0f9ff, #e0f2fe); background-size: 600% 600%; animation: animatedBackground 16s ease infinite;">
+    <!-- Main container with responsive padding -->
+    <div class="container mx-auto max-w-3xl p-4 pt-8 md:pt-12">
+
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <!-- Responsive text sizing -->
+            <h1 class="text-3xl sm:text-4xl font-bold text-sky-800">JaagrukVoter</h1>
+            <p class="text-lg text-gray-800 mt-2">Get clear, unbiased facts on candidates & policies.</p>
+        </header>
+
+        <!-- Input Section -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-8">
+
+            <!-- Module 1: Search by Name -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Search by Name, Party.</h3>
+                <!-- Responsive grid: 1 column on mobile, 3 on desktop -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <!-- Search Query -->
+                    <div class="md:col-span-2">
+                        <label for="searchQuery" class="block text-sm font-medium text-gray-700 mb-1">Enter Candidate, Party, or Policy</label>
+                        <input type="text" id="searchQuery"
+                            class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                            placeholder="e.g., 'Narendra Modi', 'Indian National Congress'">
+                    </div>
+
+                    <!-- Language Selection -->
+                    <div>
+                        <label for="language" class="block text-sm font-medium text-gray-700 mb-1">Language</label>
+                        <select id="language"
+                            class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500">
+                            <option value="English">English</option>
+                            <option value="Hindi">Hindi (हिन्दी)</option>
+                            <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                            <option value="Tamil">Tamil (தமிழ்)</option>
+                            <option value="Telugu">Telugu (తెలుగు)</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Analyze Button -->
+                <div class="mt-6 text-center">
+                    <button id="analyzeButton"
+                        class="w-full md:w-auto bg-gradient-to-r from-sky-600 to-sky-700 text-white font-semibold py-3 px-8 rounded-md hover:from-sky-700 hover:to-sky-800 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105">
+                        Analyze
+                    </button>
+                </div>
+            </div>
+
+            <!-- Or Separator -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center" aria-hidden="true">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center">
+                    <span class="bg-white px-2 text-sm text-gray-500">OR</span>
+                </div>
+            </div>
+
+            <!-- Module 2: Search by Location -->
+            <div>
+                <h3 class="text-lg font-medium text-gray-900 mb-3">Search by Location</h3>
+                <label for="locationQuery" class="block text-sm font-medium text-gray-700 mb-1">Enter Location</label>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="text" id="locationQuery" class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500" placeholder="e.g., 'Jayanagar, Bengaluru'">
+                    <button id="findRepsButton"
+                        class="flex-shrink-0 w-full sm:w-auto bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-3 px-6 rounded-md hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105">
+                        Find Reps
+                    </button>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Find the MP & MLA for your area.</p>
+            </div>
+
+
+            <!-- Shared API Key Input -->
+            <div class="mt-6 border-t border-gray-200 pt-6">
+                <!-- MODIFIED: Updated label -->
+                <label for="perplexityApiKey" class="block text-sm font-medium text-gray-700 mb-1">Perplexity API Key (Required for Search)</label>
+                <input type="password" id="perplexityApiKey"
+                    class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500"
+                    placeholder="Enter your Perplexity API Key">
+                <p class="text-xs text-gray-500 mt-1">Get a key from the Perplexity API dashboard. Your key is not stored.</p>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loading" class="flex justify-center items-center py-10" style="display: none;">
+            <div class="spinner"></div>
+            <p class="ml-4 text-gray-600">Finding and summarizing verified facts...</p>
+        </div>
+
+        <!-- Error Message -->
+        <div id="error"
+            class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6"
+            role="alert">
+            <strong class="font-bold">Error:</strong>
+            <span class="block sm:inline" id="errorMessage"></span>
+        </div>
+
+        <!-- Representative Selection (NEW) -->
+        <div id="rep-selection" class="bg-white p-6 rounded-lg shadow-md mb-8" style="display: none;">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Select a Representative to Analyze</h3>
+            <p class="text-sm text-gray-600 mb-4">We found these representatives for your area. Select one to get their detailed profile.</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <button id="mpButton" data-name=""
+                    class="w-full bg-sky-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-sky-700 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    ...
+                </button>
+                <button id="mlaButton" data-name=""
+                    class="w-full bg-sky-600 text-white font-semibold py-3 px-6 rounded-md hover:bg-sky-700 transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed">
+                    ...
+                </button>
+            </div>
+        </div>
+
+
+        <!-- Results Section -->
+        <div id="results" class="bg-white rounded-lg shadow-lg" style="display: none;">
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 bg-gray-50 rounded-t-lg">
+                <nav class="flex -mb-px px-6" aria-label="Tabs">
+                    <button id="tab-summary"
+                        class="tab-button w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm text-sky-600 border-sky-500"
+                        aria-current="page">
+                        Fact-Based Details
+                    </button>
+                    <button id="tab-sources"
+                        class="tab-button w-1/2 py-4 px-1 text-center border-b-2 font-medium text-sm text-gray-500 border-transparent hover:text-gray-700 hover:border-gray-300">
+                        Verified Sources
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Summary Content -->
+            <!-- Responsive padding -->
+            <div id="content-summary" class="p-6 md:p-8 info-card">
+
+                <!-- Person Card (Hidden by default) -->
+                <div id="person-card" style="display: none;">
+                    <h3 id="person-name">Person Details</h3>
+                    <div class="card-grid">
+                        <div class="data-point">
+                            <span class="data-label">Net Worth</span>
+                            <span class="data-value" id="person-net-worth"></span>
+                        </div>
+                        <div class="data-point">
+                            <span class="data-label">Criminal Cases</span>
+                            <span class="data-value" id="person-criminal-cases"></span>
+                        </div>
+                        <div class="data-point">
+                            <span class="data-label">Current Party</span>
+                            <span class="data-value" id="person-current-party"></span>
+                        </div>
+                        <div class="data-point">
+                            <span class="data-label">Previous Party</span>
+                            <span class="data-value" id="person-previous-party"></span>
+                        </div>
+                        <div class="data-point md:col-span-2">
+                            <span class="data-label">NGO Affiliation</span>
+                            <span class="data-value" id="person-ngo"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Party Card (Hidden by default) -->
+                <div id="party-card" style="display: none;">
+                    <h3 id="party-name">Party Details</h3>
+                    <div class="card-grid">
+                        <div class="data-point">
+                            <span class="data-label">Year Established</span>
+                            <span class="data-value" id="party-year"></span>
+                        </div>
+                        <div class="data-point">
+                            <span class="data-label">Founded By</span>
+                            <span class="data-value" id="party-founder"></span>
+                        </div>
+                        <div class="data-point md:col-span-2">
+                            <span class="data-label">Current Head / Leader</span>
+                            <span class="data-value" id="party-head"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- General Summary (for policies, etc.) -->
+                <div id="summaryOutput" style="display: none;">
+                    <h3 class="text-2xl font-bold mb-4 text-sky-800">Fact-Based Summary</h3>
+                    <div id="summary-text-content" class="prose prose-lg max-w-none text-gray-700">
+                        <!-- AI-generated summary will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sources Content -->
+            <!-- Responsive padding -->
+            <div id="content-sources" class="p-6 md:p-8" style="display: none;">
+                <h3 class="text-2xl font-bold mb-4 text-sky-800">Information Sources</h3>
+                <p class="text-sm text-gray-600 mb-4">This summary was generated using facts from the following verified
+                    public sources:</p>
+                <ul id="sourcesOutput" class="list-disc pl-5 space-y-2">
+                    <!-- Verified sources will be injected here -->
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- --- MODIFIED/NEW MYSTERY HTML --- -->
+
+    <!-- Hidden Mystery Element -->
+    <div id="mysteryBottle" class="fixed bottom-8 right-8 w-16 h-16 bg-gradient-to-b from-sky-700 to-sky-400 rounded-full shadow-xl cursor-pointer hover:scale-110 transition-transform duration-300 flex items-center justify-center text-3xl font-bold">
+        🧴
+    </div>
+
+    <!-- Hidden Chat Box -->
+    <div id="chatBox" class="hidden fixed bottom-28 right-8 bg-white text-gray-900 rounded-2xl shadow-2xl w-80 p-4 border border-sky-200 z-50">
+        <h3 class="text-lg font-semibold text-sky-700 mb-2">🗣️ Jaagruk Voice Assistant</h3>
+        <div class="chat-messages h-40 overflow-y-auto mb-3 text-sm bg-sky-50 rounded-lg p-2" id="chatMessages">
+            <p class="text-gray-700">Hi! I can speak out the facts shown on your screen. Click the 🗣️ Speak Facts button below to hear them aloud!</p>
+        </div>
+        <div class="flex gap-2">
+            <button id="speakFactsBtn" class="flex-1 bg-gradient-to-r from-sky-500 to-sky-700 text-white py-2 rounded-md hover:from-sky-600 hover:to-sky-800 transition-all">🗣️ Speak Facts</button>
+            <button id="closeChatBtn" class="bg-gray-200 px-3 rounded-md hover:bg-gray-300">❌</button>
+        </div>
+
+        <!-- --- NEW CHATBOT --- -->
+        <div class="border-t border-gray-200 mt-4 pt-3">
+            <h4 class="text-md font-semibold text-sky-700 mb-2">💬 Ask a Question</h4>
+            <div id="textChatHistory" class="chat-messages h-40 overflow-y-auto mb-3 text-sm bg-sky-50 rounded-lg p-2">
+                <p class="text-gray-700">Ask me anything about Indian politics!</p>
+            </div>
+            <div class="flex gap-2">
+                <input type="text" id="chatInput" class="flex-1 w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-sky-500 focus:border-sky-500" placeholder="Type here...">
+                <button id="sendChatBtn" class="flex-shrink-0 bg-sky-600 text-white px-4 rounded-md hover:bg-sky-700 transition-all">Send</button>
+            </div>
+        </div>
+        <!-- --- END NEW CHATBOT --- -->
+    </div>
+    <!-- --- END MYSTERY HTML --- -->
+
+
+    <script>
+        async function saveSearchToBackend(query) {
+    try {
+        await fetch("http://localhost:4000/api/search-history", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                query,
+                timestamp: new Date().toISOString()
+            })
+        });
+    } catch (err) {
+        console.error("Failed to save search to backend", err);
+    }
+}
+
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_BASE = "https://jaagrukvoter-backend-2.onrender.com";
+
+
+async function logSearchToBackend(query, type, lang) {
+    if (!query || !query.trim()) return;
+    try {
+        await fetch(`${API_BASE}/api/search-history`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                query: query.trim(),
+                type: type || "",
+                language: lang || ""
+            })
+        });
+    } catch (err) {
+        console.error("Failed to log search:", err);
+    }
+}
+
+            // Main search elements
+            const analyzeButton = document.getElementById('analyzeButton');
+            const searchQuery = document.getElementById('searchQuery');
+            const language = document.getElementById('language');
+            
+            // Location search elements
+            const locationQuery = document.getElementById('locationQuery');
+            const findRepsButton = document.getElementById('findRepsButton');
+            const repSelection = document.getElementById('rep-selection');
+            const mpButton = document.getElementById('mpButton');
+            const mlaButton = document.getElementById('mlaButton');
+
+            // Shared elements
+            const perplexityApiKey = document.getElementById('perplexityApiKey');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+            const errorMessage = document.getElementById('errorMessage');
+
+            // Tabs
+            const tabSummary = document.getElementById('tab-summary');
+            const tabSources = document.getElementById('tab-sources');
+            const contentSummary = document.getElementById('content-summary');
+            const contentSources = document.getElementById('content-sources');
+
+            // Result Containers
+            const personCard = document.getElementById('person-card');
+            const partyCard = document.getElementById('party-card');
+            const summaryOutput = document.getElementById('summaryOutput');
+            const summaryTextContent = document.getElementById('summary-text-content');
+            const sourcesOutput = document.getElementById('sourcesOutput');
+
+            // --- REMOVED OLD CHATBOT ELEMENTS ---
+
+            // --- NEW MYSTERY BOTTLE ELEMENTS ---
+            const bottle = document.getElementById('mysteryBottle');
+            const chatBox = document.getElementById('chatBox');
+            const speakFactsBtn = document.getElementById('speakFactsBtn');
+            const closeChatBtn = document.getElementById('closeChatBtn');
+            const chatMessages = document.getElementById('chatMessages');
+
+            // --- NEW CHATBOT ELEMENTS ---
+            const textChatHistory = document.getElementById('textChatHistory');
+            const chatInput = document.getElementById('chatInput');
+            const sendChatBtn = document.getElementById('sendChatBtn');
+
+            // --- CHATBOT HISTORY ---
+            let chatMessagesHistory = [
+                { role: "system", content: "You are JaagrukVoter, a helpful and non-partisan AI assistant for Indian voters. Answer questions factually and neutrally. Keep responses concise and brief for this small chat window." }
+            ];
+
+            // --- REMOVED OLD CHATBOT STATE ---
+
+            // Tab switching logic
+            tabSummary.addEventListener('click', () => {
+                contentSummary.style.display = 'block';
+                contentSources.style.display = 'none';
+                tabSummary.classList.add('text-sky-600', 'border-sky-500');
+                tabSummary.classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                tabSources.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                tabSources.classList.remove('text-sky-600', 'border-sky-500');
+            });
+
+            tabSources.addEventListener('click', () => {
+                contentSummary.style.display = 'none';
+                contentSources.style.display = 'block';
+                tabSources.classList.add('text-sky-600', 'border-sky-500');
+                tabSources.classList.remove('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                tabSummary.classList.add('text-gray-500', 'border-transparent', 'hover:text-gray-700', 'hover:border-gray-300');
+                tabSummary.classList.remove('text-sky-600', 'border-sky-500');
+            });
+
+            /**
+             * Resets the UI state before a new request
+             * @param {boolean} clearReps - Whether to clear the rep selection box
+             */
+            function resetUI(clearReps = true) {
+                loading.style.display = 'flex';
+                results.style.display = 'none';
+                error.style.display = 'none';
+                if (clearReps) {
+                    repSelection.style.display = 'none';
+                }
+                personCard.style.display = 'none';
+                partyCard.style.display = 'none';
+                summaryOutput.style.display = 'none';
+                summaryTextContent.innerHTML = '';
+                sourcesOutput.innerHTML = '';
+            }
+
+            // Main analyze button click handler (for name/party search)
+            analyzeButton.addEventListener('click', () => {
+                const query = searchQuery.value;
+                const lang = language.value;
+                const apiKey = perplexityApiKey.value;
+
+                if (!query.trim()) {
+                    showError('Please enter a search term.');
+                    return;
+                }
+                
+                if (!apiKey.trim()) {
+                    showError('Please enter your Perplexity API Key.');
+                    return;
+                }
+
+                resetUI();
+
+                // 🔹 Log this search
+                logSearchToBackend(query, "name_or_party", lang);
+
+                callPerplexityAPI(query, lang, apiKey);
+            });
+
+
+            // "Find Reps" button click handler (for location search)
+            findRepsButton.addEventListener('click', () => {
+                const query = locationQuery.value;
+                const apiKey = perplexityApiKey.value;
+
+
+                if (!query.trim()) {
+                    showError('Please enter a location.');
+                    return;
+                }
+                
+                if (!apiKey.trim()) {
+                    showError('Please enter your Perplexity API Key.'); // MODIFIED
+                    return;
+                }
+                // 🔹 Log this location search
+                logSearchToBackend(query, "location", "English");
+
+                resetUI();
+                callPerplexityForReps(query, apiKey);
+            });
+
+            // Handlers for the MP/MLA selection buttons
+            function handleRepButtonClick(event) {
+                const name = event.target.dataset.name;
+                if (name && name.trim() !== '') {
+                    searchQuery.value = name; // Put name in the main search box
+                    repSelection.style.display = 'none';
+                    analyzeButton.click(); // Trigger the main analysis flow
+                }
+            }
+            mpButton.addEventListener('click', handleRepButtonClick);
+            mlaButton.addEventListener('click', handleRepButtonClick);
+
+
+            /**
+             * Shows an error message in the UI.
+             * @param {string} message - The error message to display.
+             */
+            function showError(message) {
+                errorMessage.textContent = message;
+                error.style.display = 'block';
+                loading.style.display = 'none';
+                results.style.display = 'none';
+                repSelection.style.display = 'none';
+            }
+
+            /**
+             * NEW FUNCTION: Calls Perplexity just to find MP and MLA names
+             */
+            async function callPerplexityForReps(query, apiKey) {
+                const systemPrompt = `You are an AI assistant. Find the current Member of Parliament (MP) and Member of Legislative Assembly (MLA) for "${query}" in India. Return ONLY a JSON object with the format: {"mp_name": "...", "mla_name": "..."}. If not found, use an empty string instead of 'N/A'.`;
+                const userQuery = `Find the MP and MLA for "${query}".`;
+                const apiUrl = "https://api.perplexity.ai/chat/completions";
+
+                const payload = {
+                    model: "sonar-pro",
+                    messages: [
+                        { role: "system", content: systemPrompt },
+                        { role: "user", content: userQuery }
+                    ]
+                };
+
+                try {
+                    const response = await fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const messageContent = result.choices?.[0]?.message?.content;
+                    if (!messageContent) {
+                        throw new Error("Invalid response structure from API.");
+                    }
+
+                    let repData;
+                    const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+                    if (jsonMatch && jsonMatch[0]) {
+                        repData = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error("Failed to parse MP/MLA data from API response.");
+                    }
+
+                    loading.style.display = 'none';
+                    displayRepSelection(repData);
+
+                } catch (err) {
+                    console.error("Error in callPerplexityForReps:", err);
+                    showError(err.message || "Could not find representatives.");
+                }
+            }
+
+            /**
+             * NEW FUNCTION: Displays the MP/MLA selection buttons
+             */
+            function displayRepSelection(repData) {
+                const mpName = (repData.mp_name || '').replace(/N\/A/gi, '').trim();
+                const mlaName = (repData.mla_name || '').replace(/N\/A/gi, '').trim();
+
+                if (mpName) {
+                    mpButton.textContent = `Get Details for MP: ${mpName}`;
+                    mpButton.dataset.name = mpName;
+                    mpButton.disabled = false;
+                } else {
+                    mpButton.textContent = 'MP not found';
+                    mpButton.dataset.name = '';
+                    mpButton.disabled = true;
+                }
+
+                if (mlaName) {
+                    mlaButton.textContent = `Get Details for MLA: ${mlaName}`;
+                    mlaButton.dataset.name = mlaName;
+                    mlaButton.disabled = false;
+                } else {
+                    mlaButton.textContent = 'MLA not found';
+                    mlaButton.dataset.name = '';
+                    mlaButton.disabled = true;
+                }
+
+                repSelection.style.display = 'block';
+            }
+
+
+            /**
+             * Calls the Perplexity API with the user's query and language.
+             * (This is the main function for getting person/party details)
+             * @param {string} query - The user's search query.
+             * @param {string} lang - The selected output language.
+             * @param {string} apiKey - The user's Perplexity API key.
+             */
+            async function callPerplexityAPI(query, lang, apiKey) {
+                const systemPrompt = `You are a non-partisan AI assistant for Indian voters ('JaagrukVoter'). Your purpose is to provide clear, simple, and strictly factual explanations about political candidates, parties, and policies in India, based on verifiable public information.
+
+- You MUST be non-partisan and unbiased. Do not express opinions.
+- First, you MUST identify the entity type (person, party, policy, other).
+- If the query is clearly about a person (e.g., 'Narendra Modi', 'B. Y. Raghavendra'), the entityType MUST be 'person'.
+- You MUST return a JSON object.
+- If a specific fact is not found or not applicable, omit that field or use an empty string. NEVER use "N/A", "Not Available", "Not Found", or any similar placeholders.
+- The final response MUST be in ${lang}.
+- When filling 'personDetails' for a politician:
+  1. Search general public information for 'currentParty', 'previousParty', and 'ngoAffiliation'.
+  2. *Also* prioritize searching their latest election affidavit (from sources like MyNeta.info or ECI) to find 'netWorth' and 'criminalCases'.
+  3. If any information is unavailable, leave the field empty or omit it entirely - do not use placeholders.
+
+The JSON object structure MUST be:
+{
+  "entityType": "person|party|policy|other",
+  "personDetails": {
+    "name": "Full Name",
+    "netWorth": "...",
+    "criminalCases": "...",
+    "currentParty": "...",
+    "previousParty": "...",
+    "ngoAffiliation": "..."
+  },
+  "partyDetails": {
+    "name": "Party Name",
+    "yearEstablished": "...",
+    "founder": "...",
+    "head": "..."
+  },
+  "generalSummary": "A summary if the entity is a policy or 'other'."
+}
+
+- If the entity is a 'person', fill 'personDetails' and set 'partyDetails' to null.
+- If the entity is a 'party', fill 'partyDetails' and set 'personDetails' to null.
+- If the entity is 'policy' or 'other', fill 'generalSummary' and set both 'personDetails' and 'partyDetails' to null.`;
+
+                const userQuery = `Using verified public information, please analyze: "${query}".
+Identify the entity type and find the requested facts.
+If the query is about a person, search general public info for their party history and affiliations, AND *also* specifically search their latest election affidavit data (e.C., from MyNeta.info) for 'netWorth' and 'criminalCases'.
+Return ONLY the JSON object.`;
+
+                const apiUrl = "https://api.perplexity.ai/chat/completions";
+
+                const payload = {
+                    model: "sonar-pro", // Use Perplexity's online model
+                    messages: [
+                        {
+                            role: "system",
+                            content: systemPrompt
+                        },
+                        {
+                            role: "user",
+                            content: userQuery
+                        }
+                    ]
+                };
+
+                try {
+                    const response = await fetchWithRetry(apiUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${apiKey}`
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        let errorDetails = `API Error: ${response.status} ${response.statusText}`;
+                        try {
+                            const errorData = await response.json();
+                            if (errorData.error && errorData.error.message) {
+                                errorDetails = `API Error: ${errorData.error.message}`;
+                            }
+                        } catch (e) { /* Ignore JSON parse error */ }
+                        throw new Error(errorDetails);
+                    }
+
+                    const result = await response.json();
+                    
+                    const messageContent = result.choices?.[0]?.message?.content;
+                    if (!messageContent) {
+                        throw new Error("Invalid response structure from API.");
+                    }
+
+                    // 1. Extract the structured JSON data
+                    let responseData;
+                    const jsonMatch = messageContent.match(/\{[\s\S]*\}/);
+                    if (jsonMatch && jsonMatch[0]) {
+                        responseData = JSON.parse(jsonMatch[0]);
+                    } else {
+                        throw new Error("Failed to parse JSON from API response.");
+                    }
+
+
+                    // 2. Extract grounding sources (Perplexity's format)
+                    let sources = [];
+                    if (result.search_results && result.search_results.length > 0) {
+                        sources = result.search_results.map(source => ({
+                            uri: source.url, // Perplexity uses 'url'
+                            title: source.title
+                        })).filter(source => source.uri && source.title); // Ensure sources are valid
+                    }
+                    
+                    // Hide loading and display results
+                    loading.style.display = 'none';
+                    displayResults(responseData, sources);
+
+                } catch (err) {
+                    console.error("Error in callPerplexityAPI:", err);
+                    showError(err.message || "An unknown error occurred.");
+                }
+            }
+
+            /**
+             * Populates the UI with the structured data from the API.
+             * @param {object} data - The parsed JSON object from the AI.
+             * @param {Array} sources - An array of source objects {uri, title}.
+             */
+            function displayResults(data, sources) {
+                // Hide all containers first
+                personCard.style.display = 'none';
+                partyCard.style.display = 'none';
+                summaryOutput.style.display = 'none';
+                
+                // Helper to populate text, using empty string as fallback
+                const fill = (id, text) => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        // Clean the text of citations (e.g., [1][2]) and N/A before displaying
+                        let cleanText = (text || "")
+                            .replace(/(\[[0-9WQ, ]+\])+/g, '') // Removes [1], [WQ], [1, 2], etc.
+                            .replace(/N\/A/gi, '') // Removes N/A (case insensitive)
+                            .trim(); // Removes leftover whitespace
+                        el.textContent = cleanText;
+                    }
+                };
+
+                switch (data.entityType) {
+                    case 'person':
+                        const p = data.personDetails || {};
+                        fill('person-name', p.name || searchQuery.value); // Use query as fallback name
+                        fill('person-net-worth', p.netWorth);
+                        fill('person-criminal-cases', p.criminalCases);
+                        fill('person-current-party', p.currentParty);
+                        fill('person-previous-party', p.previousParty);
+                        fill('person-ngo', p.ngoAffiliation);
+                        personCard.style.display = 'block';
+                        break;
+                    case 'party':
+                        const party = data.partyDetails || {};
+                        fill('party-name', party.name || searchQuery.value); // Use query as fallback name
+                        fill('party-year', party.yearEstablished);
+                        fill('party-founder', party.founder);
+                        fill('party-head', party.head);
+                        partyCard.style.display = 'block';
+                        break;
+                    case 'policy':
+                    case 'other':
+                    default:
+                        // MODIFIED: Clean up the summary text, remove asterisks and citations
+                        const cleanSummary = (data.generalSummary || "No summary available.")
+                            .replace(/\*/g, '') // Remove asterisks
+                            .replace(/(\[[0-9WQ, ]+\])+/g, '') // Remove citations
+                            .trim();
+                        summaryTextContent.innerHTML = cleanSummary.replace(/\n/g, '<br>');
+                        summaryOutput.style.display = 'block';
+                        break;
+                }
+
+                // Populate sources
+                if (sources.length > 0) {
+                    sourcesOutput.innerHTML = ''; // Clear any old sources
+                    sources.forEach(source => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.href = source.uri;
+                        a.textContent = source.title;
+                        a.target = '_blank'; // Open in new tab
+                        a.rel = 'noopener noreferrer';
+                        a.className = 'text-sky-600 hover:text-sky-800 hover:underline';
+                        li.appendChild(a);
+                        sourcesOutput.appendChild(li);
+                    });
+                } else {
+                    sourcesOutput.innerHTML = '<li>No public sources were cited for this summary.</li>';
+                }
+
+                // --- MODIFICATION START ---
+                // Call the money rain function
+                triggerMoneyRain();
+                // --- MODIFICATION END ---
+
+                results.style.display = 'block';
+                // Default to summary tab
+                tabSummary.click();
+            }
+
+            /**
+             * A fetch wrapper with exponential backoff retry logic.
+             * @param {string} url - The API URL.
+             * @param {object} options - The fetch options (method, headers, body).
+             * @param {number} retries - Number of retries.
+             * @param {number} backoff - Initial backoff delay in ms.
+             * @returns {Promise<Response>}
+             */
+            async function fetchWithRetry(url, options, retries = 3, backoff = 1000) {
+                let lastError;
+                for (let i = 0; i < retries; i++) {
+                    try {
+                        const res = await fetch(url, options);
+                        if (res.ok) {
+                            return res;
+                        }
+                        // Only retry on server errors or rate limiting
+                        if (res.status === 429 || res.status >= 500) {
+                            throw new Error(`Retryable error: ${res.status}`);
+                        } else {
+                            // Don't retry on client errors (e.g., 400 Bad Request)
+                            return res;
+                        }
+                    } catch (err) {
+                        lastError = err;
+                        // Don't log retries to console as per instructions
+                        await new Promise(resolve => setTimeout(resolve, backoff * Math.pow(2, i)));
+                    }
+                }
+                throw lastError || new Error("Fetch failed after multiple retries.");
+            }
+
+            
+            // --- NEW FUNCTION: MONEY RAIN ---
+            /**
+             * Creates a money rain animation when data is fetched successfully
+             */
+            function triggerMoneyRain() {
+                const container = document.body;
+
+                for (let i = 0; i < 30; i++) { // Number of falling notes
+                    const money = document.createElement('div');
+                    money.textContent = '💸';
+                    money.style.position = 'fixed';
+                    money.style.top = '-50px';
+                    money.style.left = Math.random() * window.innerWidth + 'px';
+                    money.style.fontSize = Math.random() * 30 + 20 + 'px';
+                    money.style.opacity = Math.random() * 0.8 + 0.2;
+                    money.style.zIndex = 9999;
+                    money.style.pointerEvents = 'none';
+                    money.style.transition = 'transform 3s ease-in, opacity 3s ease-in';
+
+                    container.appendChild(money);
+
+                    setTimeout(() => {
+                        money.style.transform = `translateY(${window.innerHeight + 100}px) rotate(${Math.random() * 360}deg)`;
+                        money.style.opacity = 0;
+                    }, 100);
+
+                    // Remove after animation
+                    setTimeout(() => {
+                        money.remove();
+                    }, 3500 + Math.random() * 1000);
+                }
+            }
+            // --- END MONEY RAIN FUNCTION ---
+
+
+            // --- NEW, SIMPLIFIED MYSTERY BOTTLE FUNCTIONS ---
+
+            // Toggle chat visibility
+            bottle.addEventListener('click', () => {
+                chatBox.classList.toggle('hidden');
+            });
+
+            closeChatBtn.addEventListener('click', () => {
+                chatBox.classList.add('hidden');
+            });
+
+            // Helper to add a message to the new chat box
+            function addMessageToBox(text) {
+                const msg = document.createElement('p');
+                msg.className = 'text-gray-700';
+                msg.textContent = text;
+                chatMessages.innerHTML = ''; // Clear previous messages
+                chatMessages.appendChild(msg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Text-to-Speech Functionality
+            function speakText(text) {
+                if (!text || text.trim() === '') {
+                    // Replaced alert() with a message in the chat box
+                    addMessageToBox('No information available to read.');
+                    return;
+                }
+                
+                // Stop any previous speech
+                window.speechSynthesis.cancel();
+                
+                const speech = new SpeechSynthesisUtterance(text);
+                speech.lang = 'en-IN';
+                speech.pitch = 1;
+                speech.rate = 1;
+                speech.volume = 1;
+                window.speechSynthesis.speak(speech);
+            }
+
+            // On Speak Facts button click, read visible data
+            speakFactsBtn.addEventListener('click', () => {
+                let textToRead = '';
+                let readingWhat = '';
+
+                // Gather visible data dynamically
+                const personCard = document.getElementById('person-card');
+                const partyCard = document.getElementById('party-card');
+                const summaryOutput = document.getElementById('summaryOutput');
+
+                if (personCard && personCard.style.display !== 'none') {
+                    readingWhat = 'Reading Person Details...';
+                    textToRead = `Person Details: Name: ${document.getElementById('person-name').textContent}. ` +
+                                `Net Worth: ${document.getElementById('person-net-worth').textContent}. ` +
+                                `Criminal Cases: ${document.getElementById('person-criminal-cases').textContent}. ` +
+                                `Current Party: ${document.getElementById('person-current-party').textContent}. ` +
+                                `Previous Party: ${document.getElementById('person-previous-party').textContent}. ` +
+                                `NGO Affiliation: ${document.getElementById('person-ngo').textContent}.`;
+                } else if (partyCard && partyCard.style.display !== 'none') {
+                    readingWhat = 'Reading Party Details...';
+                    textToRead = `Party Details: Name: ${document.getElementById('party-name').textContent}. ` +
+                                `Year Established: ${document.getElementById('party-year').textContent}. ` +
+                                `Founded By: ${document.getElementById('party-founder').textContent}. ` +
+                                `Current Head: ${document.getElementById('party-head').textContent}.`;
+                } else if (summaryOutput && summaryOutput.style.display !== 'none') {
+                    readingWhat = 'Reading Summary...';
+                    textToRead = document.getElementById('summary-text-content').innerText;
+                } else {
+                    readingWhat = 'No visible information to speak yet! Try analyzing a candidate or policy first.';
+                    textToRead = readingWhat;
+                }
+
+                // Add chat feedback
+                addMessageToBox(readingWhat);
+                speakText(textToRead);
+            });
+            
+            // --- END MYSTERY BOTTLE FUNCTIONS ---
+
+
+            // --- NEW CHATBOT FUNCTIONS ---
+
+            /**
+             * Handles sending a user's chat message.
+             */
+            async function handleChatSend() {
+                const userText = chatInput.value.trim();
+                const apiKey = perplexityApiKey.value; // Get API key
+
+                if (!userText) return;
+                
+                if (!apiKey.trim()) {
+                    addChatMessage('system', 'Please enter your Perplexity API Key in the main app to use the chat.');
+                    return;
+                }
+
+                // Display user message
+                addChatMessage('user', userText);
+                chatInput.value = '';
+
+                // Add to history
+                chatMessagesHistory.push({ role: "user", content: userText });
+
+                // Add loading indicator
+                const loadingEl = addChatMessage('bot', '...', true); // true for loading
+
+                try {
+                    const botResponse = await callChatbotAPI(chatMessagesHistory, apiKey);
+                    
+                    // Update loading message with real response
+                    const span = loadingEl.querySelector('span'); // Get the span
+                    if (span) {
+                        span.textContent = botResponse; 
+                        span.classList.remove('animate-pulse'); // Stop pulsing
+                        span.className = 'bg-gray-100 rounded-lg px-2 py-1 inline-block'; // Add normal style
+                    }
+
+                    // Add to history
+                    chatMessagesHistory.push({ role: "assistant", content: botResponse });
+
+                    // Keep history short (e.g., last 10 messages)
+                    if (chatMessagesHistory.length > 11) { // 1 system + 5 pairs
+                        chatMessagesHistory = [chatMessagesHistory[0], ...chatMessagesHistory.slice(-10)];
+                    }
+
+                } catch (err) {
+                    const span = loadingEl.querySelector('span'); // Get the span
+                    if (span) {
+                        span.textContent = "Sorry, I couldn't get a response. " + (err.message || "Unknown error");
+                        span.classList.remove('animate-pulse');
+                    }
+                }
+            }
+
+            /**
+             * Adds a message to the text chat UI.
+             * @param {string} sender - 'user', 'bot', or 'system'
+             * @param {string} message - The text content of the message
+             * @param {boolean} isLoading - Whether this is a loading placeholder
+             * @returns {HTMLElement} - The created message element
+             */
+            function addChatMessage(sender, message, isLoading = false) {
+                const msg = document.createElement('p');
+                
+                // Remove initial message if it exists
+                const initialMessage = textChatHistory.querySelector('p.text-gray-700');
+                if (initialMessage && initialMessage.textContent.includes('Ask me anything')) {
+                    initialMessage.remove();
+                }
+
+                if (sender === 'user') {
+                    msg.className = 'text-right text-gray-800 mb-1';
+                    const span = document.createElement('span');
+                    span.className = 'bg-sky-100 rounded-lg px-2 py-1 inline-block';
+                    span.textContent = message; // Safe
+                    msg.appendChild(span);
+                } else if (sender === 'bot') {
+                    msg.className = 'text-left text-sky-900 mb-1';
+                    const strong = document.createElement('strong');
+                    strong.textContent = 'Jaagruk: ';
+                    msg.appendChild(strong);
+
+                    const span = document.createElement('span');
+                    if (isLoading) {
+                        span.className = 'animate-pulse';
+                        span.textContent = '...';
+                    } else {
+                        span.className = 'bg-gray-100 rounded-lg px-2 py-1 inline-block';
+                        span.textContent = message; // Safe
+                    }
+                    msg.appendChild(span);
+                } else { // system
+                    msg.className = 'text-center text-red-600 text-xs italic mb-1';
+                    msg.textContent = message; // Safe
+                }
+                
+                textChatHistory.appendChild(msg);
+                textChatHistory.scrollTop = textChatHistory.scrollHeight;
+                return msg; // Return the element in case we need to update it (for loading)
+            }
+
+            /**
+             * Calls the Perplexity API for a conversational response.
+             * @param {Array} messages - The chat history
+             * @param {string} apiKey - The Perplexity API key
+             * @returns {Promise<string>} - The bot's text response
+             */
+            async function callChatbotAPI(messages, apiKey) {
+                const apiUrl = "https://api.perplexity.ai/chat/completions";
+
+                const payload = {
+                    model: "sonar-pro", // Conversational model
+                    messages: messages // Pass the whole history
+                };
+
+                const response = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    let errorDetails = `API Error: ${response.status}`;
+                    try {
+                        const errorData = await response.json();
+                        errorDetails = errorData.error?.message || `API Error ${response.status}`;
+                    } catch (e) { /* Ignore JSON parse error */ }
+                    throw new Error(errorDetails);
+                }
+
+                const result = await response.json();
+                const botMessage = result.choices?.[0]?.message?.content;
+
+                if (!botMessage) {
+                    throw new Error("Invalid response from API.");
+                }
+
+                return botMessage;
+            }
+
+            // Event Listeners for Chat
+            sendChatBtn.addEventListener('click', handleChatSend);
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // Prevent newline in input
+                    handleChatSend();
+                }
+            });
+
+            // --- END CHATBOT FUNCTIONS ---
+
+        });
+    </script>
+</body>
+
+</html>
