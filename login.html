@@ -48,7 +48,7 @@
   </div>
 
   <script>
-    const API_BASE = "http://localhost:4000";
+    const API_BASE = "https://jaagrukvoter-backend-2.onrender.com";
 
     const emailInput = document.getElementById("email");
     const loginBtn = document.getElementById("loginBtn");
@@ -60,12 +60,14 @@
       errorEl.classList.remove("hidden");
     }
 
+    // --- NORMAL LOGIN ---
     loginBtn.addEventListener("click", async () => {
       const email = emailInput.value.trim();
       if (!email) {
         showError("Please enter your email.");
         return;
       }
+
       try {
         const res = await fetch(`${API_BASE}/api/login`, {
           method: "POST",
@@ -74,22 +76,34 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Login failed");
+
+        // 🔥 SAVE LOGIN STATUS
+        localStorage.setItem("user_logged_in", "yes");
+
+        // Redirect
         window.location.href = "index.html";
       } catch (err) {
         showError(err.message);
       }
     });
 
+    // --- GUEST LOGIN ---
     guestBtn.addEventListener("click", async () => {
       try {
         const res = await fetch(`${API_BASE}/api/login-guest`, { method: "POST" });
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Guest login failed");
+
+        // 🔥 SAVE GUEST LOGIN STATUS
+        localStorage.setItem("user_logged_in", "guest");
+
+        // Redirect
         window.location.href = "index.html";
       } catch (err) {
         showError(err.message);
       }
     });
-  </script>
+</script>
+
 </body>
 </html>
