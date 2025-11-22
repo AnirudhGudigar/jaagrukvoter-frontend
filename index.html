@@ -13,7 +13,16 @@
     
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https: http://localhost:* ws://localhost:* wss://localhost:*; connect-src 'self' http://localhost:* https://api.perplexity.ai https://cdn.tailwindcss.com https://fonts.googleapis.com https://fonts.gstatic.com; font-src 'self' https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com;">
+    <meta http-equiv="Content-Security-Policy"
+content="
+ default-src 'self' https: data:;
+ script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com;
+ style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.tailwindcss.com;
+ font-src 'self' https://fonts.gstatic.com data:;
+ connect-src 'self' https://jaagrukvoter-backend-2.onrender.com https://api.perplexity.ai;
+">
+
+    
     <title>JaagrukVoter - Clear Ballot India</title>
     <!-- Load Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
