@@ -3,6 +3,13 @@
 
 <head>
     <script>
+        // If NOT logged in → go to login page
+        if (!localStorage.getItem("user_logged_in")) {
+          window.location.href = "login.html";
+        }
+      </script>
+      
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
             if (!localStorage.getItem("user_logged_in")) {
                 window.location.href = "login.html";
